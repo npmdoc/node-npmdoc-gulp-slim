@@ -1,0 +1,215 @@
+<div class="apidocDiv">
+<style>
+/*csslint
+*/
+.apidocDiv {
+    background: #fff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.apidocDiv a[href] {
+    color: #33f;
+    font-weight: bold;
+    text-decoration: none;
+}
+.apidocDiv a[href]:hover {
+    text-decoration: underline;
+}
+.apidocCodeCommentSpan {
+    background: #bbf;
+    color: #000;
+    display: block;
+}
+.apidocCodeKeywordSpan {
+    color: #d00;
+    font-weight: bold;
+}
+.apidocCodePre {
+    background: #eef;
+    border: 1px solid;
+    color: #777;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+.apidocFooterDiv {
+    margin-top: 20px;
+    text-align: center;
+}
+.apidocModuleLi {
+    margin-top: 10px;
+}
+.apidocSectionDiv {
+    border-top: 1px solid;
+    margin-top: 20px;
+}
+.apidocSignatureSpan {
+    color: #777;
+    font-weight: bold;
+}
+</style>
+<h1>api documentation for
+    <a
+
+        href="https://github.com/cognitom/gulp-slim"
+
+    >gulp-slim (v0.3.0)</a>
+</h1>
+<h4>slim plugin for gulp</h4>
+<div class="apidocSectionDiv"><a
+    href="#apidoc.tableOfContents"
+    id="apidoc.tableOfContents"
+><h1>table of contents</h1></a><ol>
+
+    <li class="apidocModuleLi"><a href="#apidoc.module.gulp-slim">module gulp-slim</a><ol>
+
+        <li>
+
+            <a class="apidocElementLiA" href="#apidoc.element.gulp-slim.gulp-slim">
+            function <span class="apidocSignatureSpan"></span>gulp-slim
+            <span class="apidocSignatureSpan">(options)</span>
+            </a>
+
+        </li>
+
+    </ol></li>
+
+</ol></div>
+
+<div class="apidocSectionDiv">
+<h1><a href="#apidoc.module.gulp-slim" id="apidoc.module.gulp-slim">module gulp-slim</a></h1>
+
+
+    <h2>
+        <a href="#apidoc.element.gulp-slim.gulp-slim" id="apidoc.element.gulp-slim.gulp-slim">
+        function <span class="apidocSignatureSpan"></span>gulp-slim
+        <span class="apidocSignatureSpan">(options)</span>
+        </a>
+    </h2>
+    <ul>
+    <li>description and source-code<pre class="apidocCodePre">gulp-slim = function (options) {
+  var args, cmnd, spawn_options;
+  if (options == null) {
+    options = {};
+  }
+  cmnd = &#x27;slimrb&#x27;;
+  args = [];
+  spawn_options = {};
+  if (options.bundler) {
+    cmnd = &#x27;bundle&#x27;;
+    args = [&#x27;exec&#x27;, &#x27;slimrb&#x27;];
+  }
+  args.push(&#x27;-s&#x27;);
+  if (options.pretty) {
+    args.push(&#x27;-p&#x27;);
+  }
+  if (options.erb) {
+    args.push(&#x27;-e&#x27;);
+  }
+  if (options.compile) {
+    args.push(&#x27;-c&#x27;);
+  }
+  if (options.rails) {
+    args.push(&#x27;--rails&#x27;);
+  }
+  if (options.translator) {
+    args.push(&#x27;-r&#x27;);
+    args.push(&#x27;slim/translator&#x27;);
+  }
+  if (options.logicLess) {
+    args.push(&#x27;-r&#x27;);
+    args.push(&#x27;slim/logic_less&#x27;);
+  }
+  if (options.include) {
+    args.push(&#x27;-r&#x27;);
+    args.push(&#x27;slim/include&#x27;);
+  }
+  if (options.data) {
+    args.push(&#x27;--locals&#x27;);
+    args.push(JSON.stringify(options.data));
+  }
+  if (options.require) {
+    if (options.require.constructor === Array) {
+      options.require.forEach(function(lib) {
+        args.push(&#x27;-r&#x27;);
+        return args.push(lib);
+      });
+    } else if (options.require.constructor === String) {
+      args.push(&#x27;-r&#x27;);
+      args.push(options.require);
+    }
+  }
+  if (options.options) {
+    if (options.options.constructor === Array) {
+      options.options.forEach(function(opt) {
+        args.push(&#x22;-o&#x22;);
+        return args.push(opt);
+      });
+    } else if (options.options.constructor === String) {
+      args.push(&#x27;-o&#x27;);
+      args.push(options.options);
+    }
+  }
+  if (options.environment) {
+    spawn_options.env = options.environment;
+  }
+  return through.obj(function(file, encoding, callback) {
+    var b, eb, ext, original_file_path, program;
+    if (file.isNull()) {
+      return callback(null, file);
+    }
+    if (file.isStream()) {
+      return callback(new PluginError(PLUGIN_NAME, &#x27;Streaming not supported&#x27;));
+    }
+    original_file_path = file.path;
+    ext = options.erb ? &#x27;.erb&#x27; : &#x27;.html&#x27;;
+    file.path = gutil.replaceExtension(file.path, ext);
+    if (options.chdir) {
+      spawn_options.cwd = path.dirname(file.path);
+    }
+    program = spawn(cmnd, args, spawn_options);
+    b = new Buffer(0);
+    eb = new Buffer(0);
+    program.stdout.on(&#x27;readable&#x27;, function() {
+      var chunk, results;
+      results = [];
+      while (chunk = program.stdout.read()) {
+        results.push(b = Buffer.concat([b, chunk], b.length + chunk.length));
+      }
+      return results;
+    });
+    program.stdout.on(&#x27;end&#x27;, function() {
+      file.contents = b;
+      return callback(null, file);
+    });
+    program.stderr.on(&#x27;readable&#x27;, function() {
+      var chunk, results;
+      results = [];
+      while (chunk = program.stderr.read()) {
+        results.push(eb = Buffer.concat([eb, chunk], eb.length + chunk.length));
+      }
+      return results;
+    });
+    program.stderr.on(&#x27;end&#x27;, function() {
+      var err, msg;
+      if (eb.length &#x3e; 0) {
+        err = eb.toString();
+        msg = &#x22;Slim error in file (&#x22; + original_file_path + &#x22;):\n&#x22; + err;
+        return callback(new PluginError(PLUGIN_NAME, msg));
+      }
+    });
+    return program.stdin.write(file.contents, function() {
+      return program.stdin.end();
+    });
+  });
+}</pre></li>
+    <li>example usage<pre class="apidocCodePre">n/a</pre></li>
+    </ul>
+
+
+</div>
+
+<div class="apidocFooterDiv">
+    [ this document was created with
+    <a href="https://github.com/kaizhu256/node-utility2" target="_blank">utility2</a>
+    ]
+</div>
+</div>
